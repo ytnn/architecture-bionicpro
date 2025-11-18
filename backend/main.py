@@ -6,6 +6,8 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, Depends, HTTPException, Header, Query
+from fastapi.middleware.cors import CORSMiddleware
+
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -14,6 +16,13 @@ DATABASE_URL = os.getenv(
 
 app = FastAPI(title="BionicPRO Reports API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL)
@@ -114,5 +123,41 @@ def get_report(
 
     if not row:
         raise HTTPException(status_code=404, detail="Report not found")
+
+    return row
+    
+@app.get("/users/current")
+def get_current_user(
+    authorization: Optional[str] = Header(None),
+    db=Depends(get_db),
+):
+    """
+    Возвращает client_id и базовую информацию о текущем пользователе
+    по его email из access token.
+    """
+    token_email = get_email_from_token(authorization)
+
+    with db.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT
+                client_id,
+                full_name,
+                email,
+                country,
+                prosthesis_type,
+                MAX(generated_at) AS last_generated_at
+            FROM user_usage_report
+            WHERE email = %s
+            GROUP BY client_id, full_name, email, country, prosthesis_type
+            ORDER BY last_generated_at DESC
+            LIMIT 1
+            """,
+            (token_email,),
+        )
+        row = cur.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found for this user")
 
     return row
