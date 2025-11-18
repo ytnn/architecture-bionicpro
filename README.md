@@ -51,7 +51,7 @@ http://localhost:8080/admin
 
 Открыть: http://localhost:3000
 
-- Войти через Keycloak
+- Войти через Keycloak под одним из пользователей из таблицы [crm_client](https://github.com/ytnn/architecture-bionicpro/blob/319200b1e82c222fa7aa1162c7302e2e56c07b95/airflow/db/init-analytics-db.sql#L25)
 
 - Нажать Download Report
 
