@@ -52,8 +52,6 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
-    volumes:
-      - ./airflow/db/init-airflow-db.sql:/docker-entrypoint-initdb.d/init-airflow-db.sql
     ports:
       - "5435:5432"
     healthcheck:
@@ -79,7 +77,6 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/dags/sql:/opt/airflow/dags/sql
-      - ./airflow/requirements.txt:/opt/airflow/requirements.txt
     user: "${AIRFLOW_UID:-50000}:0"
     depends_on:
       airflow_db:
